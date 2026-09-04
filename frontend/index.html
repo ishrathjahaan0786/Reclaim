@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Reclaim</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F7F9FC;
+    --surface: #FFFFFF;
+    --border: #E4E8EF;
+    --text: #12172B;
+    --muted: #6B7280;
+    --blue: #3B6FF6;
+    --blue-tint: #EAF0FE;
+    --green: #1FAA59;
+    --green-tint: #E6F7ED;
+    --amber: #B8790A;
+    --amber-tint: #FDF3DF;
+    --violet: #5A5FE0;
+    --violet-tint: #ECEDFB;
+    --red: #D8453A;
+    --red-tint: #FBEAE9;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+
+  header {
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  padding: 14px 32px; display: flex; align-items: center;
+}
+nav {
+  display: flex; gap: 22px; position: absolute; left: 50%; transform: translateX(-50%);
+}
+  .logo { display: flex; align-items: center; gap: 9px; font-weight: 700; font-size: 17px; }
+  nav { display: flex; gap: 22px; margin-left: 8px; }
+  nav a {
+    font-size: 14px; font-weight: 500; color: var(--muted); text-decoration: none;
+    padding-bottom: 4px; border-bottom: 2px solid transparent; cursor: pointer;
+  }
+  nav a.active { color: var(--blue); border-bottom-color: var(--blue); }
+  .conn { margin-left: auto; display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); }
+  .conn-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
+  .conn-dot.ok { background: var(--green); }
+  .conn-dot.bad { background: var(--red); }
+
+  main { padding: 32px; max-width: 1200px; margin: 0 auto; }
+  .hero-title { font-size: 30px; font-weight: 700; margin: 4px 0 26px; letter-spacing: -0.01em; }
+  .hero-title em { color: var(--blue); font-style: italic; }
+
+  .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; }
+  .stat-card .label { font-size: 13px; font-weight: 500; color: var(--muted); margin-bottom: 10px; }
+  .stat-icon {
+  width: 26px; height: 26px; border-radius: 6px; background: var(--blue-tint);
+  display: flex; align-items: center; justify-content: center; margin-bottom: 10px;
+}
+  .stat-card .value { font-size: 32px; font-weight: 700; }
+  .stat-card .sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .stat-card.safe .value { color: var(--green); }
+
+  .board { display: grid; grid-template-columns: 340px 1fr; gap: 16px; }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .panel-header { padding: 16px 18px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .panel-header h3 { font-size: 15px; margin: 0; }
+  .panel-body { padding: 8px; max-height: 620px; overflow-y: auto; }
+
+  .case-row { padding: 12px; border-radius: 8px; cursor: pointer; margin-bottom: 2px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .case-row:hover { background: var(--bg); }
+  .case-row.selected { background: var(--blue-tint); }
+  .case-row .order-id { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+  .case-row .meta { font-size: 12px; color: var(--muted); }
+
+  .badge { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+  .badge.SUCCESS, .badge.SUCCESS_LATE { background: var(--green-tint); color: var(--green); }
+  .badge.WAIT_WINDOW { background: var(--amber-tint); color: var(--amber); }
+  .badge.FAILED { background: var(--red-tint); color: var(--red); }
+  .badge.UNCERTAIN { background: var(--violet-tint); color: var(--violet); }
+  .badge.NEW { background: var(--bg); color: var(--muted); }
+
+  .detail-empty { padding: 80px 20px; text-align: center; color: var(--muted); font-size: 14px; }
+  .detail-body { padding: 22px 24px; }
+
+  .callout { background: var(--blue); color: #fff; border-radius: 10px; padding: 16px 18px; margin-bottom: 24px; display: flex; align-items: center; gap: 14px; }
+  .callout.risk { background: var(--red); }
+  .callout.review { background: var(--violet); }
+  .callout-icon { width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .callout .title { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+  .callout .sub { font-size: 12px; opacity: 0.9; }
+
+  .timeline-heading { font-size: 14px; font-weight: 600; margin-bottom: 14px; }
+  .timeline { position: relative; padding-left: 26px; }
+  .timeline::before { content: ""; position: absolute; left: 9px; top: 6px; bottom: 6px; width: 1px; background: var(--border); }
+  .t-node { position: relative; margin-bottom: 18px; }
+  .t-node::before { content: ""; position: absolute; left: -26px; top: 2px; width: 18px; height: 18px; border-radius: 50%; border: 3px solid var(--surface); background: var(--muted); }
+  .t-node.safe::before { background: var(--green); }
+  .t-node.caution::before { background: var(--amber); }
+  .t-node.risk::before { background: var(--red); }
+  .t-node.review::before { background: var(--violet); }
+  .t-node .top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+  .t-node .decision { font-size: 13px; font-weight: 600; }
+  .t-node .time { font-size: 11px; color: var(--muted); }
+  .t-node .reasoning { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  .sim-section { margin-top: 26px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .sim-section h4 { font-size: 13px; margin: 0 0 10px; }
+  .sim-buttons { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+  button.sim { font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500; background: var(--bg); border: 1px solid var(--border); border-radius: 7px; padding: 8px 12px; cursor: pointer; color: var(--text); }
+  button.sim:hover { border-color: var(--blue); }
+  .sim-log { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted); white-space: pre-wrap; margin-top: 6px; }
+  button.refresh { font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; background: var(--blue); color: #fff; border: none; border-radius: 7px; padding: 7px 13px; cursor: pointer; }
+
+  .rules-list { padding: 8px 0; }
+  .rule-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; margin-bottom: 12px; display: flex; gap: 14px; align-items: flex-start; }
+  .rule-num { width: 26px; height: 26px; border-radius: 50%; background: var(--blue-tint); color: var(--blue); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .rule-card .rule-title { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+  .rule-card .rule-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  .hidden { display: none; }
+  .empty-inbox { padding: 40px 16px; text-align: center; color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+      <path d="M12 2L4 5V11C4 16.5 7.5 21 12 22C16.5 21 20 16.5 20 11V5L12 2Z" fill="#3B6FF6"/>
+      <path d="M8.5 12L11 14.5L16 9" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Reclaim
+  </div>
+  <nav>
+    <a class="active" data-view="dashboard">Dashboard</a>
+    <a data-view="rules">Rules</a>
+  </nav>
+  <div class="conn">
+    <span class="conn-dot" id="connDot"></span>
+    <span id="connText">checking backend…</span>
+  </div>
+</header>
+
+<main>
+
+<div id="dashboardView">
+  <div class="hero-title">Never act on <em>a bad payment signal.</em></div>
+
+  <div class="stat-row">
+   <div class="stat-card safe">
+  <div class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2L4 5V11C4 16.5 7.5 21 12 22C16.5 21 20 16.5 20 11V5L12 2Z" stroke="#3B6FF6" stroke-width="1.6"/><path d="M9 12l2 2 4-4" stroke="#3B6FF6" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+  <div class="label">Wrong money actions</div>
+  <div class="value" id="statWrong">—</div>
+  <div class="sub">Across the live batch test</div>
+</div>
+<div class="stat-card">
+  <div class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="#3B6FF6" stroke-width="1.6"/><circle cx="12" cy="12" r="3" fill="#3B6FF6"/></svg></div>
+  <div class="label">Scenarios resolved correctly</div>
+  <div class="value" id="statCorrect">—</div>
+  <div class="sub">50 synthetic edge cases</div>
+</div>
+<div class="stat-card">
+  <div class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M2 12C2 12 5.5 6 12 6C18.5 6 22 12 22 12C22 12 18.5 18 12 18C5.5 18 2 12 2 12Z" stroke="#3B6FF6" stroke-width="1.6"/><circle cx="12" cy="12" r="2.5" stroke="#3B6FF6" stroke-width="1.6"/></svg></div>
+  <div class="label">Cases tracked</div>
+  <div class="value" id="statCases">—</div>
+  <div class="sub">Live, from this session</div>
+</div>
+  </div>
+
+  <div class="board">
+    <div class="panel">
+      <div class="panel-header">
+        <h3>Inbox</h3>
+        <button class="refresh" onclick="loadCases()">Refresh</button>
+      </div>
+      <div class="panel-body" id="caseList">
+        <div class="empty-inbox">No cases yet. Send a real webhook or use the simulator once a case exists.</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div id="detailPane">
+        <div class="detail-empty">Select a case from the inbox to see its decision timeline.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="rulesView" class="hidden">
+  <div class="hero-title">The guardrails <em>that never bend.</em></div>
+  <div class="rules-list" id="rulesList"></div>
+</div>
+
+</main>
+
+<script>
+const API_BASE = "http://localhost:4000";
+let cases = [];
+let selectedOrderId = null;
+
+const RULES = [
+  { title: "Terminal states are never reopened", desc: "Once a payment is confirmed SUCCESS or SUCCESS_LATE, no later event — not a delayed failure signal, not noise — can undo that decision." },
+  { title: "A failure is never trusted immediately", desc: "Every 'failed' signal starts a wait window before any action is taken, in case a success signal is still in flight." },
+  { title: "Ground truth is checked directly", desc: "After the wait window elapses, Reclaim polls Razorpay's payment status API directly, instead of waiting for a second webhook that may never arrive." },
+  { title: "Only one recovery link at a time", desc: "Once a payment is confirmed failed, exactly one recovery link is prepared. A repeated failure signal for the same order does not trigger a second one." },
+  { title: "Unrecognized events are escalated, never guessed", desc: "Any event type the system doesn't explicitly handle is flagged for human review rather than assumed to be safe." },
+  { title: "Duplicate events change nothing", desc: "The same webhook event ID is never processed twice, so one real event can never trigger two actions." },
+];
+
+function renderRules() {
+  document.getElementById("rulesList").innerHTML = RULES.map((r, i) => `
+    <div class="rule-card">
+      <div class="rule-num">${i + 1}</div>
+      <div>
+        <div class="rule-title">${r.title}</div>
+        <div class="rule-desc">${r.desc}</div>
+      </div>
+    </div>
+  `).join("");
+}
+
+function switchView(view) {
+  document.getElementById("dashboardView").classList.toggle("hidden", view !== "dashboard");
+  document.getElementById("rulesView").classList.toggle("hidden", view !== "rules");
+  document.querySelectorAll("nav a").forEach(a => a.classList.toggle("active", a.dataset.view === view));
+}
+document.querySelectorAll("nav a").forEach(a => a.addEventListener("click", () => switchView(a.dataset.view)));
+
+function calloutClass(state) {
+  if (state === "FAILED") return "risk";
+  if (state === "UNCERTAIN") return "review";
+  return "";
+}
+function nodeClass(decision) {
+  if (!decision) return "";
+  if (decision.includes("SUCCESS") || decision.includes("CONFIRM_ORDER")) return "safe";
+  if (decision.includes("WAIT")) return "caution";
+  if (decision === "REQUEST_MERCHANT_REVIEW") return "review";
+  if (decision === "PREPARE_ONE_RECOVERY_LINK") return "risk";
+  return "";
+}
+
+async function checkConnection() {
+  try {
+    const res = await fetch(`${API_BASE}/health`);
+    if (res.ok) {
+      document.getElementById("connDot").className = "conn-dot ok";
+      document.getElementById("connText").textContent = "backend connected";
+      return true;
+    }
+  } catch (e) {}
+  document.getElementById("connDot").className = "conn-dot bad";
+  document.getElementById("connText").textContent = "backend not reachable";
+  return false;
+}
+
+async function loadCases() {
+  try {
+    const res = await fetch(`${API_BASE}/api/cases`);
+    const data = await res.json();
+    cases = data.cases || [];
+    document.getElementById("statCases").textContent = cases.length;
+    renderCaseList();
+  } catch (e) {}
+}
+
+function renderCaseList() {
+  const el = document.getElementById("caseList");
+  if (cases.length === 0) {
+    el.innerHTML = '<div class="empty-inbox">No cases yet. Send a real webhook or use the simulator once a case exists.</div>';
+    return;
+  }
+  el.innerHTML = cases.map(c => `
+    <div class="case-row ${c.orderId === selectedOrderId ? 'selected' : ''}" onclick="selectCase('${c.orderId}')">
+      <div>
+        <div class="order-id mono">${c.orderId}</div>
+        <div class="meta">${c.eventCount} event${c.eventCount === 1 ? '' : 's'}</div>
+      </div>
+      <span class="badge ${c.state}">${c.state.replace('_', ' ')}</span>
+    </div>
+  `).join("");
+}
+
+async function selectCase(orderId) {
+  selectedOrderId = orderId;
+  renderCaseList();
+  const pane = document.getElementById("detailPane");
+  pane.innerHTML = '<div class="detail-empty">Loading…</div>';
+  try {
+    const res = await fetch(`${API_BASE}/api/cases/${encodeURIComponent(orderId)}`);
+    const c = await res.json();
+    renderDetail(c);
+  } catch (e) {
+    pane.innerHTML = '<div class="detail-empty">Could not load this case.</div>';
+  }
+}
+
+function renderDetail(c) {
+  const pane = document.getElementById("detailPane");
+  const last = c.auditLog[c.auditLog.length - 1];
+  const cClass = calloutClass(c.state);
+  const calloutTitle = c.state === "UNCERTAIN" ? "Needs review"
+    : c.state === "FAILED" ? "Recovery in progress"
+    : "Safe to proceed";
+  const calloutSub = last ? last.reasoning : "";
+
+  const timelineHtml = c.auditLog.map(entry => `
+    <div class="t-node ${nodeClass(entry.decision)}">
+      <div class="top">
+        <span class="decision mono">${entry.decision}</span>
+        <span class="time mono">${new Date(entry.timestamp).toLocaleTimeString()}</span>
+      </div>
+      <div class="reasoning">${entry.reasoning}</div>
+    </div>
+  `).join("");
+
+  pane.innerHTML = `
+    <div class="panel-header">
+      <h3>Order ${c.orderId}</h3>
+      <span class="badge ${c.state}">${c.state.replace('_', ' ')}</span>
+    </div>
+    <div class="detail-body">
+      <div class="callout ${cClass}">
+        <div class="callout-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+          <div class="title">${calloutTitle}</div>
+          <div class="sub">${calloutSub}</div>
+        </div>
+      </div>
+
+      <div class="timeline-heading">Decision timeline</div>
+      <div class="timeline">${timelineHtml || '<div class="detail-empty">No audit entries yet.</div>'}</div>
+
+      <div class="sim-section">
+        <h4>Try to break it</h4>
+        <div class="sim-buttons">
+          <button class="sim" onclick="simulateEvent('${c.orderId}', 'captured')">Send captured</button>
+          <button class="sim" onclick="simulateEvent('${c.orderId}', 'failed')">Send failed</button>
+          <button class="sim" onclick="simulateEvent('${c.orderId}', 'refund_initiated')">Send unknown event</button>
+        </div>
+        <div class="sim-log" id="simLog"></div>
+      </div>
+    </div>
+  `;
+}
+
+async function simulateEvent(orderId, eventType) {
+  const log = document.getElementById("simLog");
+  log.textContent = "sending…";
+  try {
+    const res = await fetch(`${API_BASE}/api/simulate-event`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId, eventType })
+    });
+    const result = await res.json();
+    log.textContent = `→ ${result.status} | state: ${result.state} | action: ${result.action}`;
+    await loadCases();
+    await selectCase(orderId);
+  } catch (e) {
+    log.textContent = "failed to reach backend";
+  }
+}
+
+async function runBatchTest() {
+  try {
+    const res = await fetch(`${API_BASE}/api/batch-test`);
+    const summary = await res.json();
+    document.getElementById("statWrong").textContent = summary.wrongMoneyActions;
+    document.getElementById("statCorrect").textContent = `${summary.correct}/${summary.total}`;
+  } catch (e) {}
+}
+
+async function init() {
+  renderRules();
+  const ok = await checkConnection();
+  if (ok) {
+    await loadCases();
+    await runBatchTest();
+  }
+  setInterval(async () => {
+    await checkConnection();
+    await loadCases();
+  }, 4000);
+}
+
+init();
+</script>
+
+</body>
+</html>

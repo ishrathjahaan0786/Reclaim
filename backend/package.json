@@ -1,0 +1,18 @@
+{
+  "name": "reclaim-backend",
+  "version": "0.1.0",
+  "description": "Reclaim — AI Revenue Recovery agent for Razorpay payment reconciliation",
+  "main": "src/server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/server.js",
+    "test:batch": "node src/batchTest.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "cors": "^2.8.5",
+    "razorpay": "^2.9.4",
+    "dotenv": "^16.4.5",
+    "uuid": "^9.0.1"
+  }
+}
